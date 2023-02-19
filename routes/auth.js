@@ -4,22 +4,23 @@ const auth = require("../middleware/auth");
 const { create_log } = require("../services/logger/logger");
 const { login } = require("../services/auth/validate");
 
+const JWT_EXPIRY = process.env.JWT_EXPIRY ?? 36000000;
+
 router.post("/", async (req, res) => {
   const { username, email, password } = req.body;
-  const expires_in = 36000;
 
   if ((!username && !email) || !password)
     return res.status(400).json({ msg: "Please enter all fields" });
 
   try {
-    const token = await login(username, email, password, expires_in);
+    const token = await login(username, email, password, JWT_EXPIRY);
     create_log(
       "info",
       `User logged in - ${email ? email : username}`,
       "",
       req.ip
     );
-    res.json({ token, expires_in });
+    res.json({ token });
   } catch (error) {
     if (error.status) {
       await create_log("info", error.message, "", req.ip);
